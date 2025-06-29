@@ -1,72 +1,419 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión de Importaciones</title>
+    <title>Gestión de Importaciones - Procesos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        color: #333;
-      }
-      .container {
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        width: 80%;
-        max-width: 800px;
-        text-align: center;
-      }
-      h1 {
-        color: #2196F3;
-      }
-      .btn {
-        background-color: #2196F3;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-top: 20px;
-      }
-      .btn:hover {
-        background-color: #1976D2;
-      }
-      .info {
-        margin-top: 20px;
-        font-size: 18px;
-        color: #555;
-      }
+        body {
+            background-color: #f0f4f8;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section label {
+            font-weight: bold;
+        }
+
+        .notification {
+            margin-top: 20px;
+        }
+
+        .semaforo-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-section {
+            margin-left: 20px;
+        }
+
+        .semaforo {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-left: 10px;
+            display: inline-block;
+        }
+
+        .rojo { background-color: red; }
+        .amarillo { background-color: yellow; }
+        .verde { background-color: green; }
+
+        .extra-fields {
+            margin-top: 15px;
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
 
-    <div class="container">
-      <h1>Sistema de Gestión de Importaciones</h1>
-      <p>Bienvenido al sistema de gestión de importaciones. Aquí podrás registrar y gestionar los productos que deseas importar.</p>
-      
-      <!-- Botón para simular una acción de importación -->
-      <button class="btn" onclick="alert('Simulando una importación...')">Registrar Importación</button>
-
-      <div class="info">
-        <p>El sistema te ayudará a gestionar la información de tus importaciones, incluyendo:</p>
-        <ul>
-          <li>Documentos de importación</li>
-          <li>Seguimiento de carga</li>
-          <li>Estados de aduanas</li>
-          <li>Y mucho más...</li>
-        </ul>
-      </div>
+<div class="container">
+    <!-- Proceso Naviera -->
+    <div class="card">
+        <h2 class="text-center">Proceso Naviera</h2>
+        <form id="navieraForm">
+            <div class="form-section">
+                <label for="numBooking">Número de Booking/Factura:</label>
+                <input type="text" id="numBooking" class="form-control" required><br>
+            </div>
+            <div class="form-section">
+                <label for="producto">Tipo de Producto:</label>
+                <input type="text" id="producto" class="form-control" required><br>
+            </div>
+            <div class="form-section">
+                <label for="requierePermisos">¿Requiere permisos/restricciones?</label><br>
+                <input type="checkbox" id="requierePermisosSi" onchange="toggleRestricciones()"> Sí
+                <input type="checkbox" id="requierePermisosNo" onchange="toggleRestricciones()"> No<br>
+            </div>
+            <div class="form-section">
+                <label for="fechaLlegada">Fecha de Llegada ETA:</label>
+                <input type="date" id="fechaLlegada" class="form-control"><br>
+                <div class="semaforo-container">
+                    <label>Semáforo de llegada:</label>
+                    <span id="semaforo" class="semaforo"></span>
+                </div>
+            </div>
+            <div class="form-section">
+                <label for="preliquidacion">¿Preliquidación realizada?</label>
+                <input type="checkbox" id="preliquidacion" onchange="marcarPreliquidacionEnAduana()"><br>
+            </div>
+            <div class="form-section">
+                <label for="correoAvisoLlegada">¿Correo solicitando aviso de llegada enviado?</label>
+                <input type="checkbox" id="correoAvisoLlegada"><br>
+            </div>
+            <div class="form-section">
+                <label for="facturaGastosLocales">¿Factura de gastos locales recibida?</label>
+                <input type="checkbox" id="facturaGastosLocales"><br>
+            </div>
+            <div class="form-section">
+                <label for="pagoImportador">¿Pago de importador y carta de autorización enviados?</label>
+                <input type="checkbox" id="pagoImportador"><br>
+            </div>
+            <div class="form-section">
+                <label for="blFisico">¿BL físico recibido?</label>
+                <input type="checkbox" id="blFisico"><br>
+                <label for="casCorreo">¿CAS recibido por correo?</label>
+                <input type="checkbox" id="casCorreo"><br>
+            </div>
+        </form>
     </div>
 
-  </body>
+    <!-- Proceso de Aduana -->
+    <div class="card">
+        <h2 class="text-center">Proceso de Aduana</h2>
+        <form id="aduanaForm">
+            <!-- 1. Preliquidación -->
+            <div class="form-section">
+                <label for="preliquidacionAduana">Preliquidación realizada:</label>
+                <input type="checkbox" id="preliquidacionAduana" disabled><br>
+            </div>
+
+            <!-- 2. Revisar si el producto tiene restricciones -->
+            <div class="form-section">
+                <label for="restriccionesProducto">¿El producto tiene restricciones?</label>
+                <span id="restriccionesTexto"> </span><br>
+            </div>
+
+            <!-- 3. Esperar ingreso físico de la carga -->
+            <div class="form-section">
+                <label for="ingresoFisico">Revisar ingreso físico de la carga (peso):</label>
+                <input type="checkbox" id="ingresoFisico"><br>
+            </div>
+
+            <!-- 5. Declaración en ECUAPASS -->
+            <div class="form-section">
+                <label for="declaracionECUAPASS">Declaración en ECUAPASS con factura y BL:</label>
+                <input type="checkbox" id="declaracionECUAPASS"><br>
+            </div>
+
+            <!-- 6. Sistema habilita liquidación -->
+            <div class="form-section">
+                <label for="sistemaHabilitaLiquidacion">Sistema habilita liquidación:</label>
+                <input type="checkbox" id="sistemaHabilitaLiquidacion"><br>
+            </div>
+
+            <!-- 7. Canal de aforo asignado -->
+            <div class="form-section">
+                <label for="canalAforo">Canal de aforo asignado:</label>
+                <select id="canalAforo" class="form-select" onchange="mostrarCanalAforoOpciones()">
+                    <option value="automatico">Automático</option>
+                    <option value="documental">Documental</option>
+                    <option value="fisico">Físico</option>
+                </select><br>
+            </div>
+
+            <!-- Canal de Aforo Extra -->
+            <div id="canalAforoExtra" class="extra-fields"></div>
+
+            <!-- 8. Confirmación de cierre de aforo y de CAS -->
+            <div class="form-section">
+                <label for="confirmacionCierreAforo">¿Confirmación de cierre de aforo?</label>
+                <input type="checkbox" id="confirmacionCierreAforo"><br>
+                <label for="confirmacionCAS">¿CAS recibido?</label>
+                <input type="checkbox" id="confirmacionCAS"><br>
+            </div>
+
+            <!-- 10. Salida autorizada - CAS recibida -->
+            <div class="form-section">
+                <label for="salidaAutorizada">¿Salida autorizada - CAS recibida?</label>
+                <input type="checkbox" id="salidaAutorizada"><br>
+            </div>
+        </form>
+    </div>
+
+    <!-- Proceso de Retiro de Carga -->
+    <div class="card">
+        <h2 class="text-center">Proceso de Retiro de Carga</h2>
+        <form id="retiroForm">
+            <div class="form-section">
+                <label for="icasBL">¿Se presentó al puerto con ICAS + BL?</label>
+                <input type="checkbox" id="icasBL"><br>
+            </div>
+            <div class="form-section">
+                <label for="facturacionPuerto">¿Se pidió facturación en el puerto?</label>
+                <input type="checkbox" id="facturacionPuerto"><br>
+            </div>
+            <div class="form-section">
+                <label for="turnoIngreso">Fecha y hora del turno de ingreso del camión:</label>
+                <input type="datetime-local" id="turnoIngreso" class="form-control"><br>
+            </div>
+            <div class="form-section">
+                <label for="retiroContenedor">¿Se realizó el retiro del contenedor con camión?</label>
+                <input type="checkbox" id="retiroContenedor"><br>
+            </div>
+            <div class="form-section">
+                <label for="interchangeContenedor">¿Se devolvió el contenedor vacío (INTERCHANGE)?</label>
+                <input type="checkbox" id="interchangeContenedor"><br>
+            </div>
+            <div class="form-section">
+                <label for="garantiaNaviera">¿Se recuperó la garantía de la naviera?</label>
+                <input type="checkbox" id="garantiaNaviera"><br>
+            </div>
+            <div class="form-section">
+                <label for="finalizarTramite">¿Trámite finalizado?</label>
+                <input type="checkbox" id="finalizarTramite"><br>
+            </div>
+            <div class="form-section">
+                <label for="terminosWord">Subir archivo Word con los términos del proceso:</label>
+                <input type="file" id="terminosWord" class="form-control"><br>
+            </div>
+        </form>
+    </div>
+
+    <!-- Botón para guardar todo el proceso -->
+    <div class="form-section text-center">
+        <button type="button" onclick="guardarTodo()" class="btn btn-success">Guardar Todo el Proceso</button>
+    </div>
+
+    <!-- Botón para generar y descargar el archivo Word -->
+    <div class="form-section text-center">
+        <button type="button" onclick="generarYDescargarWord()" class="btn btn-primary">Generar y Descargar Archivo Word</button>
+    </div>
+</div>
+
+<script>
+    // Función para marcar automáticamente los valores en Aduana cuando se marca Preliquidación en Naviera
+    function marcarPreliquidacionEnAduana() {
+        const preliquidacionNaviera = document.getElementById('preliquidacion');
+        document.getElementById('preliquidacionAduana').checked = preliquidacionNaviera.checked;
+    }
+
+    // Función para habilitar o deshabilitar las restricciones en Aduana
+    function toggleRestricciones() {
+        const requierePermisosSi = document.getElementById('requierePermisosSi').checked;
+        const requierePermisosNo = document.getElementById('requierePermisosNo').checked;
+        const restriccionesTexto = document.getElementById('restriccionesTexto');
+
+        // Si seleccionas "Sí", habilita las restricciones en Aduana
+        if (requierePermisosSi) {
+            restriccionesTexto.innerHTML = 'Sí';
+        } 
+        // Si seleccionas "No", deshabilita las restricciones
+        else if (requierePermisosNo) {
+            restriccionesTexto.innerHTML = 'No';
+        }
+        // Si no se selecciona nada, mantén vacío el campo en Aduana
+        else {
+            restriccionesTexto.innerHTML = '';
+        }
+    }
+
+    // Función para actualizar el semáforo de acuerdo con la fecha de llegada
+    document.getElementById('fechaLlegada').addEventListener('change', function() {
+        const fechaLlegada = new Date(this.value);
+        const fechaHoy = new Date();
+        
+        fechaHoy.setHours(0, 0, 0, 0);
+        fechaLlegada.setHours(0, 0, 0, 0);
+
+        const diferenciaDias = Math.floor((fechaLlegada - fechaHoy) / (1000 * 3600 * 24));
+        const semaforo = document.getElementById('semaforo');
+
+        if (diferenciaDias <= 7) {
+            semaforo.className = 'semaforo rojo';
+        } else if (diferenciaDias <= 14) {
+            semaforo.className = 'semaforo amarillo';
+        } else {
+            semaforo.className = 'semaforo verde';
+        }
+    });
+
+    // Función para guardar todo el proceso (Naviera, Aduana, Retiro)
+    function guardarTodo() {
+        const procesoNaviera = {
+            numBooking: document.getElementById('numBooking').value,
+            producto: document.getElementById('producto').value,
+            requierePermisos: document.getElementById('requierePermisos').value,
+            fechaLlegada: document.getElementById('fechaLlegada').value,
+            preliquidacion: document.getElementById('preliquidacion').checked,
+            correoAvisoLlegada: document.getElementById('correoAvisoLlegada').checked,
+            facturaGastosLocales: document.getElementById('facturaGastosLocales').checked,
+            pagoImportador: document.getElementById('pagoImportador').checked,
+            blFisico: document.getElementById('blFisico').checked,
+            casCorreo: document.getElementById('casCorreo').checked
+        };
+
+        const procesoAduana = {
+            preliquidacionAduana: document.getElementById('preliquidacionAduana').checked,
+            restriccionesProducto: document.getElementById('restriccionesProducto').checked,
+            ingresoFisico: document.getElementById('ingresoFisico').checked,
+            declaracionECUAPASS: document.getElementById('declaracionECUAPASS').checked,
+            sistemaHabilitaLiquidacion: document.getElementById('sistemaHabilitaLiquidacion').checked,
+            canalAforo: document.getElementById('canalAforo').value,
+            confirmacionCierreAforo: document.getElementById('confirmacionCierreAforo').checked,
+            confirmacionCAS: document.getElementById('confirmacionCAS').checked,
+            salidaAutorizada: document.getElementById('salidaAutorizada').checked
+        };
+
+        const procesoRetiro = {
+            icasBL: document.getElementById('icasBL').checked,
+            facturacionPuerto: document.getElementById('facturacionPuerto').checked,
+            turnoIngreso: document.getElementById('turnoIngreso').value,
+            retiroContenedor: document.getElementById('retiroContenedor').checked,
+            interchangeContenedor: document.getElementById('interchangeContenedor').checked,
+            garantiaNaviera: document.getElementById('garantiaNaviera').checked,
+            finalizarTramite: document.getElementById('finalizarTramite').checked
+        };
+
+        // Guardar en localStorage
+        localStorage.setItem('procesoNaviera', JSON.stringify(procesoNaviera));
+        localStorage.setItem('procesoAduana', JSON.stringify(procesoAduana));
+        localStorage.setItem('procesoRetiro', JSON.stringify(procesoRetiro));
+
+        alert('¡Todo el proceso se ha guardado correctamente!');
+    }
+
+    // Función para generar y descargar el archivo Word con los datos de todo el proceso
+    function generarYDescargarWord() {
+        const procesoNaviera = JSON.parse(localStorage.getItem('procesoNaviera'));
+        const procesoAduana = JSON.parse(localStorage.getItem('procesoAduana'));
+        const procesoRetiro = JSON.parse(localStorage.getItem('procesoRetiro'));
+
+        const contenido = `
+            Proceso Naviera:
+            Número de Booking/Factura: ${procesoNaviera.numBooking}
+            Producto: ${procesoNaviera.producto}
+            Requiere Permisos: ${procesoNaviera.requierePermisos}
+            Fecha de Llegada ETA: ${procesoNaviera.fechaLlegada}
+            Preliquidación Realizada: ${procesoNaviera.preliquidacion ? 'Sí' : 'No'}
+            Correo Aviso Llegada: ${procesoNaviera.correoAvisoLlegada ? 'Sí' : 'No'}
+            Factura de Gastos Locales: ${procesoNaviera.facturaGastosLocales ? 'Sí' : 'No'}
+            Pago de Importador: ${procesoNaviera.pagoImportador ? 'Sí' : 'No'}
+            BL Físico: ${procesoNaviera.blFisico ? 'Sí' : 'No'}
+            CAS Correo: ${procesoNaviera.casCorreo ? 'Sí' : 'No'}
+
+            Proceso Aduana:
+            Preliquidación Realizada: ${procesoAduana.preliquidacionAduana ? 'Sí' : 'No'}
+            Restricciones Producto: ${procesoAduana.restriccionesProducto ? 'Sí' : 'No'}
+            Ingreso Físico: ${procesoAduana.ingresoFisico ? 'Sí' : 'No'}
+            Declaración ECUAPASS: ${procesoAduana.declaracionECUAPASS ? 'Sí' : 'No'}
+            Sistema Habilita Liquidación: ${procesoAduana.sistemaHabilitaLiquidacion ? 'Sí' : 'No'}
+
+            Proceso de Retiro:
+            ICAS + BL Presentado: ${procesoRetiro.icasBL ? 'Sí' : 'No'}
+            Facturación en Puerto: ${procesoRetiro.facturacionPuerto ? 'Sí' : 'No'}
+            Turno de Ingreso: ${procesoRetiro.turnoIngreso}
+            Retiro del Contenedor: ${procesoRetiro.retiroContenedor ? 'Sí' : 'No'}
+            Contenedor Vacío Devuelto: ${procesoRetiro.interchangeContenedor ? 'Sí' : 'No'}
+            Garantía de la Naviera Recuperada: ${procesoRetiro.garantiaNaviera ? 'Sí' : 'No'}
+            Trámite Finalizado: ${procesoRetiro.finalizarTramite ? 'Sí' : 'No'}
+        `;
+
+        const blob = new Blob([contenido], { type: 'application/msword' });
+        saveAs(blob, 'Proceso_Importaciones_Completo.doc');
+    }
+
+    // Función para mostrar los campos adicionales según el canal de aforo
+    function mostrarCanalAforoOpciones() {
+        const canalAforo = document.getElementById('canalAforo').value;
+        const canalAforoExtra = document.getElementById('canalAforoExtra');
+        canalAforoExtra.innerHTML = ''; // Limpiar campos previos
+
+        if (canalAforo === 'documental') {
+            canalAforoExtra.innerHTML = `
+                <label for="confirmacionCierreAforo">Confirmación de cierre de aforo:</label>
+                <input type="checkbox" id="confirmacionCierreAforo"><br>
+            `;
+        } else if (canalAforo === 'fisico') {
+            canalAforoExtra.innerHTML = `
+                <label for="fechaAperturaAforo">Fecha de apertura de aforo:</label>
+                <input type="date" id="fechaAperturaAforo" class="form-control"><br>
+                <label for="fechaCierreAforo">Fecha de cierre de aforo:</label>
+                <input type="date" id="fechaCierreAforo" class="form-control"><br>
+            `;
+        }
+    }
+
+    // Cargar los datos guardados al recargar la página
+    window.onload = function() {
+        const procesoNaviera = JSON.parse(localStorage.getItem('procesoNaviera'));
+        const procesoAduana = JSON.parse(localStorage.getItem('procesoAduana'));
+        const procesoRetiro = JSON.parse(localStorage.getItem('procesoRetiro'));
+
+        if (procesoNaviera) {
+            document.getElementById('numBooking').value = procesoNaviera.numBooking;
+            document.getElementById('producto').value = procesoNaviera.producto;
+            document.getElementById('requierePermisos').value = procesoNaviera.requierePermisos;
+            document.getElementById('fechaLlegada').value = procesoNaviera.fechaLlegada;
+            document.getElementById('preliquidacion').checked = procesoNaviera.preliquidacion;
+            document.getElementById('correoAvisoLlegada').checked = procesoNaviera.correoAvisoLlegada;
+            document.getElementById('facturaGastosLocales').checked = procesoNaviera.facturaGastosLocales;
+            document.getElementById('pagoImportador').checked = procesoNaviera.pagoImportador;
+            document.getElementById('blFisico').checked = procesoNaviera.blFisico;
+            document.getElementById('casCorreo').checked = procesoNaviera.casCorreo;
+        }
+
+        if (procesoAduana) {
+            document.getElementById('preliquidacionAduana').checked = procesoAduana.preliquidacionAduana;
+            document.getElementById('restriccionesProducto').checked = procesoAduana.restriccionesProducto;
+            document.getElementById('ingresoFisico').checked = procesoAduana.ingresoFisico;
+            document.getElementById('declaracionECUAPASS').checked = procesoAduana.declaracionECUAPASS;
+            document.getElementById('sistemaHabilitaLiquidacion').checked = procesoAduana.sistemaHabilitaLiquidacion;
+            document.getElementById('canalAforo').value = procesoAduana.canalAforo;
+            document.getElementById('confirmacionCierreAforo').checked = procesoAduana.confirmacionCierreAforo;
+            document.getElementById('confirmacionCAS').checked = procesoAduana.confirmacionCAS;
+            document.getElementById('salidaAutorizada').checked = procesoAduana.salidaAutorizada;
+            document.getElementById('restriccionesTexto').innerText = procesoAduana.restriccionesProducto ? 'Sí' : '';
+        }
+
+        if (procesoRetiro) {
+            document.getElementById('icasBL').checked = procesoRetiro.icasBL;
+            document.getElementById('facturacionPuerto').checked = procesoRetiro.facturacionPuerto;
+            document.getElementById('turnoIngreso').value = procesoRetiro.turnoIngreso;
+            document.getElementById('retiroContenedor').checked = procesoRetiro.retiroContenedor;
+            document.getElementById('interchangeContenedor').checked = procesoRetiro.interchangeContenedor;
+            document.getElementById('garantiaNaviera').checked = procesoRetiro.garantiaNaviera;
+            document.getElementById('finalizarTramite').checked = procesoRetiro.finalizarTramite;
+        }
+    };
+</script>
+
+</body>
 </html>
